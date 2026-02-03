@@ -36,9 +36,10 @@ h2 {
 
 .toolbar {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
+  align-items: center;
+  gap: 12px;
 }
+
 
 button {
   background:#334155;
@@ -47,6 +48,7 @@ button {
   padding: 8px 14px;
   border-radius: 6px;
   cursor: pointer;
+  margin-bottom: 20px;
 }
 
 input, textarea {
@@ -98,6 +100,18 @@ th, td {
 
 .cancel {
   background: #9ca3af;
+}
+
+.jumlah {
+  font-size: 20px;
+  font-weight: bold;
+  color: black;
+  padding-right: 20px;
+  margin-left: auto; 
+}
+
+.next {
+  margin-top: 20px;
 }
 
 </style>
