@@ -4,9 +4,12 @@
       <h2>Buku Tamu</h2>
       <p class="subtitle">Teaching Factory PPLG - SMKN 4 Tasikmalaya</p>
 
-      <div class="toolbar">
-        <button class="btn btn-dark btn-lg" data-bs-toggle="modal" data-bs-target="#form-modal">+ Tambah</button>
-        <input type="text" id="search" placeholder="Cari data..." onkeyup="searchTable()">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-dark btn-lg" data-bs-toggle="modal" data-bs-target="#form-modal">+ Isi Buku</button>
+        <span class="text-muted text-center">{{ records.length }} Pengunjung</span>
+        <div class="d-flex align-items-center gap-2">
+          <input class="form-control form-control-lg" type="search" id="search" placeholder="Cari Nama..." onkeyup="searchTable()">
+        </div>
       </div>
       <table id="table">
         <thead>
@@ -15,7 +18,7 @@
             <th>Tanggal</th>
             <th>Nama Lengkap</th>
             <th>Nomor Telepon</th>
-            <th>Alamat / Lisensi</th>
+            <th>Alamat / Instansi</th>
             <th>Tujuan Kunjungan</th>
           </tr>
         </thead>
@@ -30,35 +33,44 @@
           </tr>
         </tbody>
       </table>
+
+      <div class="next">
+    <button @click="prevPage" class="btn btn-dark btn-lg">Sebelumnya</button>
+    <span class="mx-3">Halaman {{ page }}</span>
+     <button @click="nextPage" class="btn btn-dark btn-lg">Selanjutnya</button>
     </div>
+    </div>
+
+
 
     <!-- MODAL FORM -->
      <div class="modal fade" id="form-modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header">
-            <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+          <div class="modal-header bg-dark text-white">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Isi Buku </h1>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="submitForm">
               <div class="mb-4">
                 <label for="nama">Nama Lengkap</label>
-                <input v-model="form.nama" type="text" class="form-control" placeholder="Nama Lengkap">
+                <input v-model="form.nama" type="text" class="form-control form-control-lg" placeholder="Nama Lengkap" required>
               </div>
               <div class="mb-4">
                 <label for="nomor">Nomor Telepon</label>
-                <input v-model="form.nomor" type="text" class="form-control" placeholder="Nomor Telepon">
+                <input v-model="form.nomor" type="text" class="form-control form-control-lg" placeholder="Nomor Telepon" required>
               </div>
               <div class="mb-4">
                 <label for="alamat">Alamat / Instansi</label>
-                <input v-model="form.alamat" type="text" class="form-control" placeholder="Alamat / Lisensi">
+                <textarea v-model="form.alamat" rows="3" class="form-control form-control-lg" placeholder="Tulis alamat lengkap/instansi" required></textarea>
               </div>
               <div class="mb-4">
                 <label for="tujuan_kunjungan">Tujuan Kunjungan</label>
-                <input v-model="form.tujuan_kunjungan" type="text" class="form-control" placeholder="Tujuan Kunjungan">
+                <textarea v-model="form.tujuan_kunjungan" rows="3" class="form-control form-control-lg" placeholder="Tujuan Kunjungan" required></textarea>
               </div>
-              <button type="submit" class="btn btn-primary">Kirim</button>
+              <button :disabled="form.nama.length < 4 || form.nomor.length < 10 || form.alamat.length < 20 || form.tujuan_kunjungan < 20" type="submit" class="btn btn-dark btn-lg">Kirim</button>
+              <button class="btn btn-outline-dark btn-lg ms-2 float-end" data-bs-dismiss="modal">Tutup</button>
             </form>
           </div>
         </div>
@@ -68,8 +80,13 @@
 </template>
 
 <script setup>
+useHead({
+  title: 'Buku Tamu - Teaching Factory PPLG SMKN 4 Tasikmalaya',
+  meta: [
+    { name: 'description', content: 'Buku tamu digital untuk mencatat pengunjung ke Teaching Factory PPLG SMKN 4 Tasikmalaya' }
+  ]
+})
 const client = useSupabaseClient()
-console.log(client)
 
 const form = ref({
   nama: '',
@@ -79,6 +96,8 @@ const form = ref({
 })
 
 const records = ref([])
+const page = ref(1)
+const pageSize = 30
 
 async function submitForm() {
   console.log('Submitting form:', form.value)
@@ -100,9 +119,14 @@ async function submitForm() {
 }
 
 async function fetchData() {
+const from = (page.value - 1) * pageSize
+const to = from + pageSize - 1
+
   const { data, error } = await client
     .from('bukutamu')
     .select('*')
+      .order('tanggal', { ascending: false })
+      .range(from, to)
   
   if (error) {
     console.error('Error fetching data:', error)
@@ -111,6 +135,16 @@ async function fetchData() {
   }
 }
 
+function nextPage() {
+  page.value++
+  fetchData()
+}
+function prevPage() {
+  if (page.value > 1) {
+    page.value--
+    fetchData()
+  }
+}
 onMounted(() => {
   fetchData()
 })
