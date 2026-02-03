@@ -6,9 +6,11 @@
 
       <div class="d-flex justify-content-between align-items-center mb-3">
         <button class="btn btn-dark btn-lg" data-bs-toggle="modal" data-bs-target="#form-modal">+ Isi Buku</button>
-        <span class="text-muted text-center">{{ records.length }} Pengunjung</span>
+        <span class="text-muted text-center">Menampilkan {{ records.length }} Pengunjung</span>
         <div class="d-flex align-items-center gap-2">
-          <input class="form-control form-control-lg" type="search" id="search" placeholder="Cari Nama..." onkeyup="searchTable()">
+          <form @submit.prevent="fetchData">
+            <input v-model="keyword" class="form-control form-control-lg" type="search" id="search" placeholder="Cari Nama..."/>
+          </form>
         </div>
       </div>
       <table id="table">
@@ -98,6 +100,7 @@ const form = ref({
 const records = ref([])
 const page = ref(1)
 const pageSize = 30
+const keyword = ref('')
 
 async function submitForm() {
   console.log('Submitting form:', form.value)
@@ -119,19 +122,36 @@ async function submitForm() {
 }
 
 async function fetchData() {
-const from = (page.value - 1) * pageSize
-const to = from + pageSize - 1
+  const from = (page.value - 1) * pageSize
+  const to = from + pageSize - 1
 
-  const { data, error } = await client
-    .from('bukutamu')
-    .select('*')
+  if(keyword.value.length > 0) {
+    const { data, error } = await client
+      .from('bukutamu')
+      .select('*')
+      .ilike('nama', `%${keyword.value}%`)
       .order('tanggal', { ascending: false })
       .range(from, to)
-  
-  if (error) {
-    console.error('Error fetching data:', error)
-  } else {
-    records.value = data
+    
+    if (error) {
+      console.error('Error fetching data:', error)
+    } else {
+      records.value = data
+    }
+    return
+  }
+  else {
+    const { data, error } = await client
+      .from('bukutamu')
+      .select('*')
+        .order('tanggal', { ascending: false })
+        .range(from, to)
+    
+    if (error) {
+      console.error('Error fetching data:', error)
+    } else {
+      records.value = data
+    }
   }
 }
 
